@@ -7,6 +7,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JToggleButton;
 import javax.swing.ScrollPaneLayout;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -21,14 +22,19 @@ import com.ezreb.filebrowser.images.ImageLoader;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
@@ -318,13 +324,14 @@ public class MainWindow extends JDialog {
 			}
 		}
 		fe.setSelected(true);
+		fe.setColoro();
 		this.updateListing();
 	}
 
 }
 
 @SuppressWarnings("serial")
-class FileEntry extends JButton {
+class FileEntry extends JToggleButton {
 
 	public FileEntry(String name, File f) {
 		this.name = name;
@@ -352,20 +359,38 @@ class FileEntry extends JButton {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(FileEntry.this.f.isFile()){
-					try {
-						((MainWindow) FileEntry.this.getParent().getParent().getParent().getParent().getParent().getParent().getParent()).finalFile = FileEntry.this.f;
-					} catch(ClassCastException c) {
-						c.printStackTrace();
-					}
-				} else if(FileEntry.this.f.isDirectory()) {
-					((MainWindow) FileEntry.this.getParent().getParent().getParent().getParent().getParent().getParent().getParent()).currentDir = FileEntry.this.f;
+				try {
+					((MainWindow) FileEntry.this.getParent().getParent().getParent().getParent().getParent().getParent().getParent()).finalFile = FileEntry.this.f;
+				} catch(ClassCastException c) {
+					c.printStackTrace();
 				}
 				((MainWindow) FileEntry.this.getParent().getParent().getParent().getParent().getParent().getParent().getParent()).setSelected(FileEntry.this);
 			}
 		});
+		addMouseListener(new MouseAdapter(){
+			@Override
+		    public void mousePressed(MouseEvent e){
+		    	System.out.println(e.getClickCount());
+		        if(e.getClickCount()==2){
+		        	System.out.println("already");
+		        	FileEntry fe = FileEntry.this;
+		        	MainWindow mw = ((MainWindow) FileEntry.this.getParent().getParent().getParent().getParent().getParent().getParent().getParent());
+					if(fe.f.isDirectory()) {
+						mw.currentDir = fe.f;
+					} else if(fe.f.isFile()) {
+						mw.dispose();
+						mw.done = true;
+						mw.setVisible(false);
+					}
+		        }
+		    }
+		});
 	}
-	public boolean isAlreadyOneClick;
+	public boolean isAlreadyOneClick = false;
+	public void setColoro() {
+		System.out.println("yes");
+		this.isAlreadyOneClick = true;
+	}
 	public String name;
 	public Image im;
 	public File f;
